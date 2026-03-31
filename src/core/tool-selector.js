@@ -1,174 +1,96 @@
-const { GoogleGenAI } = require("@google/genai");
-
 /**
- * Tool Selector
- * Handles intelligent tool selection using AI and fallback logic
+ * Tool Selector for Portfolio Chatbot
+ * Fast regex-based tool selection without AI calls
  */
 class ToolSelector {
-  constructor(apiKey) {
-    this.ai = new GoogleGenAI({
-      apiKey: apiKey,
-    });
-  }
-
   /**
-   * Use AI to intelligently determine which tools are relevant
+   * Fast tool selection using regex patterns (no AI calls needed)
    */
   async getRelevantTools(question) {
-    const toolSelectionPrompt = `
-Analyze this user question and determine which portfolio tools are needed to answer it properly.
-
-AVAILABLE TOOLS:
-1. contact - Phone, email, website, address information
-2. skills - Technical and soft skills (can specify "hard", "soft", or "all")  
-3. experience - Work history and career information
-4. education - Educational background and degrees
-5. projects - Portfolio projects and development work
-6. services - Services offered and capabilities
-7. stats - Years of experience and statistics
-8. search - Search for specific technologies/terms in portfolio
-
-USER QUESTION: "${question}"
-
-Response format (JSON only):
-{
-  "tools": ["tool1", "tool2"],
-  "skillType": "all",
-  "searchTerm": "optional search term"
-}
-
-Only include tools that are actually needed to answer the question. For skills, specify "hard", "soft", or "all". Include searchTerm only if searching for specific technology.`;
-
-    try {
-      const result = await this.ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: toolSelectionPrompt }] }],
-        generationConfig: { temperature: 0, maxOutputTokens: 200 },
-      });
-
-      const response = result.candidates[0].content.parts[0].text.trim();
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-    } catch (error) {
-      console.error("Tool selection error:", error);
-    }
-
-    // Fallback to basic keyword matching if AI selection fails
-    return this.fallbackToolSelection(question);
-  }
-
-  /**
-   * Fallback tool selection using basic keywords
-   */
-  fallbackToolSelection(question) {
     const lowerQuestion = question.toLowerCase();
     const tools = [];
     let skillType = "all";
     let searchTerm = null;
 
-    if (lowerQuestion.match(/\b(email|phone|contact|reach|website)\b/))
+    // Contact information
+    if (/\b(email|phone|contact|reach|address|website)\b/i.test(question)) {
       tools.push("contact");
+    }
+
+    // Skills and technologies
     if (
-      lowerQuestion.match(
-        /\b(skills|technologies|tech stack|programming|frameworks|frontend|front-end|libraries|tools|stack|languages)\b/,
+      /\b(skills|technologies|tech|programming|languages|frameworks|tools|stack|know|familiar|use)\b/i.test(
+        question,
       )
     ) {
       tools.push("skills");
-      if (lowerQuestion.includes("soft")) skillType = "soft";
-      else if (lowerQuestion.match(/\b(technical|hard)\b/)) skillType = "hard";
-    }
-    if (
-      lowerQuestion.match(
-        /\b(experience|work|job|career|role|position|current|employment|title)\b/,
-      )
-    )
-      tools.push("experience");
-    if (
-      lowerQuestion.match(
-        /\b(education|educational|degree|university|college|school|background)\b/,
-      )
-    )
-      tools.push("education");
-    if (lowerQuestion.match(/\b(projects|portfolio|built|developed)\b/))
-      tools.push("projects");
-    if (
-      lowerQuestion.match(
-        /\b(services|capabilities|offer|consulting|freelance|hire|rate|hourly|pricing|cost|remote|maintenance|available)\b/,
-      )
-    )
-      tools.push("services");
-    if (lowerQuestion.match(/\b(years|statistics|how many|how much)\b/))
-      tools.push("stats");
 
-    // Additional info for certifications, industries, cloud, APIs, development tools
-    if (
-      lowerQuestion.match(
-        /\b(certifications|certified|industries|industry|cloud|aws|azure|gcp|apis|api|development\s+tools)\b/,
-      )
-    )
-      tools.push("additional");
+      // Determine skill type
+      if (/\b(soft|communication|leadership|teamwork)\b/i.test(question)) {
+        skillType = "soft";
+      } else if (/\b(technical|hard|programming|coding)\b/i.test(question)) {
+        skillType = "hard";
+      }
 
-    const searchMatch = lowerQuestion.match(
-      /(?:know|use|familiar with|work with|experience with)\s+([a-zA-Z0-9.+-]+)/,
-    );
-    if (searchMatch) {
-      tools.push("search");
-      searchTerm = searchMatch[1].trim();
-    }
-
-    return { tools, skillType, searchTerm };
-  }
-
-  /**
-   * Get relevant data based on tool selection
-   */
-  async getRelevantData(question, portfolioTools) {
-    // Use fast regex-based tool selection instead of AI call for better performance
-    const toolSelection = this.fallbackToolSelection(question);
-    const toolData = {};
-
-    for (const tool of toolSelection.tools || []) {
-      switch (tool) {
-        case "contact":
-          toolData.contact = portfolioTools.getContactInfo();
-          break;
-        case "skills":
-          toolData.skills = portfolioTools.getSkills(
-            toolSelection.skillType || "all",
-          );
-          break;
-        case "experience":
-          toolData.experience = portfolioTools.getExperience();
-          break;
-        case "education":
-          toolData.education = portfolioTools.getEducation();
-          break;
-        case "projects":
-          toolData.projects = portfolioTools.getProjects();
-          break;
-        case "services":
-          toolData.services = portfolioTools.getServices();
-          break;
-        case "stats":
-          toolData.stats = portfolioTools.getStats();
-          break;
-        case "additional":
-          toolData.additional = portfolioTools.getAdditionalInfo();
-          break;
-        case "search":
-          if (toolSelection.searchTerm) {
-            toolData.search = portfolioTools.searchPortfolio(
-              toolSelection.searchTerm,
-            );
-          }
-          break;
+      // Extract search term for specific technologies
+      const techPatterns =
+        /\b(react|angular|node|javascript|python|java|docker|aws|azure|gcp)\b/i;
+      const match = question.match(techPatterns);
+      if (match) {
+        searchTerm = match[0];
       }
     }
 
-    return { toolData, toolSelection };
+    // Experience and work history
+    if (
+      /\b(experience|work|job|career|role|position|current|employment|years)\b/i.test(
+        question,
+      )
+    ) {
+      tools.push("experience");
+
+      if (/\b(how\s+many|years|statistics|how\s+much)\b/i.test(question)) {
+        tools.push("stats");
+      }
+    }
+
+    // Education
+    if (
+      /\b(education|degree|university|college|school|studied|graduated)\b/i.test(
+        question,
+      )
+    ) {
+      tools.push("education");
+    }
+
+    // Projects and portfolio
+    if (
+      /\b(projects|built|developed|created|portfolio|apps|applications|websites)\b/i.test(
+        question,
+      )
+    ) {
+      tools.push("projects");
+    }
+
+    // Services offered
+    if (
+      /\b(services|offer|help|capabilities|rates|pricing|hire|freelance)\b/i.test(
+        question,
+      )
+    ) {
+      tools.push("services");
+    }
+
+    // If no specific tools identified, get basic info
+    if (tools.length === 0) {
+      tools.push("skills", "experience");
+    }
+
+    return {
+      tools: [...new Set(tools)], // Remove duplicates
+      skillType,
+      searchTerm,
+    };
   }
 }
 

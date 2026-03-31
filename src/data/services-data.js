@@ -1,4 +1,4 @@
-const mockServices = [
+const services = [
   {
     name: "UI/Web Development",
     types: ["Html", "Css/Scss", "Bootstrap", "Tailwind", "Responsive Design"],
@@ -69,5 +69,5 @@ const mockServices = [
 ];
 
 module.exports = {
-  mockServices,
+  services,
 };

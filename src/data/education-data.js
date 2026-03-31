@@ -1,4 +1,4 @@
-const mockEducation = [
+const education = [
   {
     when: "2009 - 2013",
     where: "University of East London",
@@ -16,5 +16,5 @@ const mockEducation = [
 ];
 
 module.exports = {
-  mockEducation,
+  education,
 };

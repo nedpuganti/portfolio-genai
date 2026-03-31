@@ -1,54 +1,45 @@
 /**
- * Smart Conversation Management System
- * Handles conversation tracking, categorization, optimization, and limits
+ * Simple Conversation Management System
+ * Handles repeated question detection, rate limiting, and basic context
  */
 class ConversationManager {
   constructor() {
     this.conversations = new Map();
-    this.conversationLimits = {
-      maxMessagesPerConversation: 50,
-      maxConversationDuration: 30 * 60 * 1000, // 30 minutes
-      optimizationThreshold: 15, // Optimize when exceeding this many messages
-      cleanupInterval: 5 * 60 * 1000, // 5 minutes
-      maxActiveConversations: 100,
+    this.limits = {
+      maxRecentQuestions: 3, // Keep last 3 questions (portfolio conversations are brief)
+      maxConversations: 5, // Max active conversations (minimal for portfolio)
+      cleanupInterval: 30 * 60 * 1000, // 30 minutes (less frequent cleanup)
     };
 
     // Start periodic cleanup
-    this.startConversationCleanup();
+    this.startCleanup();
   }
 
   /**
-   * Start periodic conversation cleanup
+   * Start periodic cleanup
    */
-  startConversationCleanup() {
+  startCleanup() {
     setInterval(() => {
-      this.cleanupExpiredConversations();
-    }, this.conversationLimits.cleanupInterval);
+      this.cleanupOldConversations();
+    }, this.limits.cleanupInterval);
   }
 
   /**
-   * Get or create conversation for user
+   * Get or create simple conversation for user
    */
   getConversation(userIdentifier) {
     const now = Date.now();
     let conversation = this.conversations.get(userIdentifier);
 
     if (!conversation) {
-      if (
-        this.conversations.size >=
-        this.conversationLimits.maxActiveConversations
-      ) {
+      // Clean up if at capacity
+      if (this.conversations.size >= this.limits.maxConversations) {
         this.cleanupOldestConversations();
       }
 
       conversation = {
-        userId: userIdentifier,
-        messageCount: 0,
-        startTime: now,
         lastActivity: now,
-        messages: [],
-        topicsSeen: new Set(),
-        optimizations: 0,
+        recentQuestions: [], // Keep last few questions for context
       };
       this.conversations.set(userIdentifier, conversation);
     }
@@ -58,137 +49,51 @@ class ConversationManager {
   }
 
   /**
-   * Categorize questions into portfolio topics
-   */
-  categorizeQuestion(question) {
-    const lowerQuestion = question.toLowerCase();
-
-    if (lowerQuestion.match(/\b(email|phone|contact|reach|website)\b/))
-      return "contact";
-    if (
-      lowerQuestion.match(
-        /\b(skills|technologies|tech|programming|languages)\b/,
-      )
-    )
-      return "skills";
-    if (lowerQuestion.match(/\b(experience|work|job|career)\b/))
-      return "experience";
-    if (lowerQuestion.match(/\b(education|degree|university|college|school)\b/))
-      return "education";
-    if (lowerQuestion.match(/\b(projects|built|developed|created|portfolio)\b/))
-      return "projects";
-    if (lowerQuestion.match(/\b(services|capabilities|offer|help)\b/))
-      return "services";
-    if (lowerQuestion.match(/\b(years|statistics|how many|how much)\b/))
-      return "stats";
-    if (lowerQuestion.match(/\b(know|familiar|use|work with)\b/))
-      return "technology_search";
-
-    return "general";
-  }
-
-  /**
-   * Add message to conversation with smart categorization
+   * Add question to conversation history (simplified)
    */
   addMessageToConversation(userIdentifier, question, response) {
     const conversation = this.getConversation(userIdentifier);
-    const questionCategory = this.categorizeQuestion(question);
 
     const messageEntry = {
       timestamp: Date.now(),
-      question: question.substring(0, 200),
-      response: response.substring(0, 500),
-      questionLength: question.length,
-      responseLength: response.length,
-      category: questionCategory,
+      question:
+        question.substring(0, 150) + (question.length > 150 ? "..." : ""),
     };
 
-    conversation.messages.push(messageEntry);
-    conversation.messageCount++;
+    conversation.recentQuestions.push(messageEntry);
     conversation.lastActivity = Date.now();
-    conversation.topicsSeen.add(questionCategory);
 
-    // Smart conversation optimization when threshold exceeded
-    if (
-      conversation.messages.length >
-      this.conversationLimits.optimizationThreshold
-    ) {
-      this.optimizeConversationHistory(conversation);
+    // Keep only recent questions
+    if (conversation.recentQuestions.length > this.limits.maxRecentQuestions) {
+      conversation.recentQuestions = conversation.recentQuestions.slice(
+        -this.limits.maxRecentQuestions,
+      );
     }
   }
 
   /**
-   * Optimize conversation history (smart sampling instead of summarization)
-   */
-  optimizeConversationHistory(conversation) {
-    const messages = conversation.messages;
-
-    // Keep recent 8 messages for fresh context
-    const recentMessages = messages.slice(-8);
-    const olderMessages = messages.slice(0, -8);
-
-    // Group older messages by category
-    const messagesByCategory = {};
-    olderMessages.forEach((msg) => {
-      if (!messagesByCategory[msg.category]) {
-        messagesByCategory[msg.category] = [];
-      }
-      messagesByCategory[msg.category].push(msg);
-    });
-
-    // Keep 1-2 representative messages per topic from older messages
-    const representativeMessages = [];
-    Object.values(messagesByCategory).forEach((categoryMessages) => {
-      // Keep the most recent from each category
-      representativeMessages.push(
-        categoryMessages[categoryMessages.length - 1],
-      );
-
-      // If many messages of this type, keep one more for context
-      if (categoryMessages.length > 3) {
-        const midIndex = Math.floor(categoryMessages.length / 2);
-        representativeMessages.push(categoryMessages[midIndex]);
-      }
-    });
-
-    // Update conversation with optimized history
-    conversation.messages = [...representativeMessages, ...recentMessages];
-    conversation.optimizations++;
-
-    console.log(
-      `[CONV_OPT] Optimized conversation for ${conversation.userId}. Messages: ${messages.length} → ${conversation.messages.length}`,
-    );
-  }
-
-  /**
-   * Check for repeated questions to improve UX
+   * Check for repeated questions
    */
   checkForRepeatedQuestion(userIdentifier, question) {
     const conversation = this.conversations.get(userIdentifier);
-    if (!conversation || conversation.messages.length < 2) {
+    if (!conversation || conversation.recentQuestions.length < 2) {
       return { isRepeated: false };
     }
 
-    const questionCategory = this.categorizeQuestion(question);
     const lowerQuestion = question.toLowerCase();
 
-    // Check last 5 messages for similar questions
-    const recentMessages = conversation.messages.slice(-5);
-    const similarQuestions = recentMessages.filter((msg) => {
+    // Check last few questions for very similar ones
+    const recentQuestions = conversation.recentQuestions.slice(-3);
+    const similarQuestion = recentQuestions.find((msg) => {
       const msgLower = msg.question.toLowerCase();
-      return (
-        msg.category === questionCategory &&
-        this.calculateQuestionSimilarity(lowerQuestion, msgLower) > 0.7
-      );
+      return this.calculateQuestionSimilarity(lowerQuestion, msgLower) > 0.8;
     });
 
-    if (similarQuestions.length > 0) {
-      const lastSimilar = similarQuestions[similarQuestions.length - 1];
+    if (similarQuestion) {
       return {
         isRepeated: true,
-        category: questionCategory,
-        lastAsked: lastSimilar.timestamp,
-        timeSinceLastAsked: Date.now() - lastSimilar.timestamp,
+        lastAsked: similarQuestion.timestamp,
+        timeSinceLastAsked: Date.now() - similarQuestion.timestamp,
       };
     }
 
@@ -196,7 +101,7 @@ class ConversationManager {
   }
 
   /**
-   * Calculate similarity between two questions
+   * Calculate similarity between two questions (kept simple)
    */
   calculateQuestionSimilarity(question1, question2) {
     const words1 = new Set(question1.split(/\s+/).filter((w) => w.length > 3));
@@ -209,38 +114,30 @@ class ConversationManager {
   }
 
   /**
-   * Generate lightweight conversation context for AI
+   * Generate simple conversation context if helpful
    */
   generateConversationContext(userIdentifier) {
     const conversation = this.conversations.get(userIdentifier);
-    if (!conversation || conversation.messageCount < 5) {
+    if (!conversation || conversation.recentQuestions.length < 3) {
       return "";
     }
 
-    const topicsSeen = Array.from(conversation.topicsSeen);
-    const recentCategories = conversation.messages
-      .slice(-3)
-      .map((m) => m.category)
-      .filter((cat, idx, arr) => arr.indexOf(cat) === idx);
-
-    return `\n\nCONVERSATION CONTEXT:\n- Previous topics discussed: ${topicsSeen.join(", ")}\n- Total questions: ${conversation.messageCount}\n- Recent focus: ${recentCategories.join(", ")}\n- User seems interested in: ${topicsSeen.length > 3 ? "comprehensive portfolio information" : topicsSeen.join(" and ")}`;
+    const questionCount = conversation.recentQuestions.length;
+    return `\n\nCONVERSATION CONTEXT:\n- You've asked ${questionCount} questions in this session\n- This appears to be a multi-question portfolio inquiry`;
   }
 
   /**
-   * Clean up expired conversations
+   * Clean up old conversations (simplified)
    */
-  cleanupExpiredConversations() {
+  cleanupOldConversations() {
     const now = Date.now();
     let cleanedCount = 0;
 
     for (const [userId, conversation] of this.conversations) {
       const inactiveTime = now - conversation.lastActivity;
-      const conversationAge = now - conversation.startTime;
 
-      if (
-        inactiveTime > 60 * 60 * 1000 ||
-        conversationAge > 2 * 60 * 60 * 1000
-      ) {
+      // Remove conversations inactive for over 30 minutes
+      if (inactiveTime > 30 * 60 * 1000) {
         this.conversations.delete(userId);
         cleanedCount++;
       }
@@ -248,7 +145,7 @@ class ConversationManager {
 
     if (cleanedCount > 0) {
       console.log(
-        `[CLEANUP] Removed ${cleanedCount} expired conversations. Active: ${this.conversations.size}`,
+        `[CLEANUP] Removed ${cleanedCount} old conversations. Active: ${this.conversations.size}`,
       );
     }
   }
@@ -261,66 +158,38 @@ class ConversationManager {
       (a, b) => a[1].lastActivity - b[1].lastActivity,
     );
 
-    const toRemove = Math.ceil(conversations.length * 0.1);
+    const toRemove = 1; // Just remove oldest conversation for small portfolio scale
     for (let i = 0; i < toRemove; i++) {
       this.conversations.delete(conversations[i][0]);
     }
 
     console.log(
-      `[CLEANUP] Removed ${toRemove} oldest conversations due to capacity limit`,
+      `[CLEANUP] Removed ${toRemove} oldest conversations due to capacity`,
     );
   }
 
   /**
-   * Check conversation limits
+   * Simple conversation limits check (no session timeouts)
    */
   checkConversationLimits(userIdentifier) {
-    const conversation = this.getConversation(userIdentifier);
-    const now = Date.now();
-
-    // Check message count limit
-    if (
-      conversation.messageCount >=
-      this.conversationLimits.maxMessagesPerConversation
-    ) {
-      return {
-        allowed: false,
-        reason: "message_limit_exceeded",
-        message: `You've reached the maximum of ${this.conversationLimits.maxMessagesPerConversation} messages in this conversation. Please start a new session.`,
-      };
-    }
-
-    // Check conversation duration
-    const conversationAge = now - conversation.startTime;
-    if (conversationAge > this.conversationLimits.maxConversationDuration) {
-      this.resetConversation(userIdentifier);
-      return {
-        allowed: true,
-        reason: "conversation_reset",
-        message: "Your conversation session has been reset due to timeout.",
-      };
-    }
-
+    // For portfolio chatbot, we don't need strict limits
+    // Just basic spam protection is handled by SecurityValidator
     return { allowed: true };
   }
 
   /**
-   * Reset conversation for user
+   * Reset conversation for user (simplified)
    */
   resetConversation(userIdentifier) {
     const conversation = this.conversations.get(userIdentifier);
     if (conversation) {
-      conversation.messageCount = 0;
-      conversation.startTime = Date.now();
       conversation.lastActivity = Date.now();
-      conversation.messages = [];
-      conversation.topicsSeen = new Set();
-      conversation.optimizations = 0;
+      conversation.recentQuestions = [];
     }
   }
 
   /**
-   * Get conversation statistics
+   * Get simple conversation statistics
    */
   getConversationStats(userIdentifier) {
     const conversation = this.conversations.get(userIdentifier);
@@ -331,17 +200,9 @@ class ConversationManager {
     const now = Date.now();
     return {
       exists: true,
-      messageCount: conversation.messageCount,
-      remainingMessages:
-        this.conversationLimits.maxMessagesPerConversation -
-        conversation.messageCount,
-      conversationAge: now - conversation.startTime,
+      questionCount: conversation.recentQuestions.length,
       lastActivity: now - conversation.lastActivity,
-      isNearLimit:
-        conversation.messageCount >=
-        this.conversationLimits.maxMessagesPerConversation * 0.8,
-      topicsSeen: Array.from(conversation.topicsSeen),
-      optimizations: conversation.optimizations,
+      isActive: now - conversation.lastActivity < 30 * 60 * 1000, // 30 min
     };
   }
 }

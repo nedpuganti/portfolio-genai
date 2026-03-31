@@ -4,11 +4,11 @@ const path = require("path");
 let cachedContext = "";
 
 function buildContext() {
-  const dir = path.join(__dirname, "../mocks");
+  const dir = path.join(__dirname, "../data");
 
-  // Check if the mocks directory exists
+  // Check if the data directory exists
   if (!fs.existsSync(dir)) {
-    console.log("Mocks directory not found, initializing empty context");
+    console.log("Data directory not found, initializing empty context");
     return "";
   }
 

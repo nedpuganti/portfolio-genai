@@ -1,4 +1,4 @@
-const mockExperience = [
+const experience = [
   {
     when: "2016 - Present",
     where: "Allied Informatics",
@@ -15,5 +15,5 @@ const mockExperience = [
 ];
 
 module.exports = {
-  mockExperience,
+  experience,
 };

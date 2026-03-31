@@ -1,4 +1,4 @@
-const mockHardSkills = [
+const hardSkills = [
   {
     name: "HTML5 / SASS / CSS / Bootstrap",
     progress: 85,
@@ -17,7 +17,7 @@ const mockHardSkills = [
   },
 ];
 
-const mockSoftSkills = [
+const softSkills = [
   {
     name: "Leadership",
     progress: 70,
@@ -37,6 +37,6 @@ const mockSoftSkills = [
 ];
 
 module.exports = {
-  mockHardSkills,
-  mockSoftSkills,
+  hardSkills,
+  softSkills,
 };

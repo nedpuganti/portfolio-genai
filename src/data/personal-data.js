@@ -1,11 +1,11 @@
-const mockContactInfo = {
+const contactInfo = {
   phoneNumber: "(423) 902-8634",
   email: "itsmenarene@gmail.com",
   address: "N/A",
   website: "www.narenedpuganti.com",
 };
 
-function mockPersonalInfo(count) {
+function personalInfo(count) {
   return {
     summary: `I am a Full Stack Web Developer from Atlanta, USA. I am very passionate and dedicated to my work. I have ${count} years more work experience and enjoy working in a team or individual.`,
     firstName: "Naren",
@@ -19,7 +19,7 @@ function mockPersonalInfo(count) {
   };
 }
 
-function mockFunFacts(count) {
+function funFacts(count) {
   return [
     {
       name: "Years Experience",
@@ -41,7 +41,7 @@ function mockFunFacts(count) {
 }
 
 module.exports = {
-  mockContactInfo,
-  mockPersonalInfo,
-  mockFunFacts,
+  contactInfo,
+  personalInfo,
+  funFacts,
 };

@@ -1,4 +1,4 @@
-const mocksProjects = [
+const projects = [
   {
     id: 1,
     image: "assets/img/projects/mone_mobile.png",
@@ -82,5 +82,5 @@ const mocksProjects = [
 ];
 
 module.exports = {
-  mocksProjects,
+  projects,
 };

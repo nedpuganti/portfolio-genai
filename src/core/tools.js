@@ -6,23 +6,23 @@ const { getContext } = require("./context");
 class PortfolioTools {
   constructor() {
     this.context = null;
-    this.mockData = {};
-    this.loadMockData();
+    this.data = {};
+    this.loadData();
   }
 
-  loadMockData() {
+  loadData() {
     try {
-      this.mockData = {
-        personal: require("../mocks/personal-data.mock.js"),
-        skills: require("../mocks/skills-data.mock.js"),
-        education: require("../mocks/education-data.mock.js"),
-        experience: require("../mocks/experience-data.mock.js"),
-        projects: require("../mocks/projects-data.mock.js"),
-        services: require("../mocks/services-data.mock.js"),
+      this.data = {
+        personal: require("../data/personal-data.js"),
+        skills: require("../data/skills-data.js"),
+        education: require("../data/education-data.js"),
+        experience: require("../data/experience-data.js"),
+        projects: require("../data/projects-data.js"),
+        services: require("../data/services-data.js"),
       };
     } catch (error) {
-      console.error("Error loading mock data:", error);
-      this.mockData = {};
+      console.error("Error loading data:", error);
+      this.data = {};
     }
   }
 
@@ -38,12 +38,12 @@ class PortfolioTools {
    */
   getContactInfo() {
     try {
-      const { mockContactInfo } = this.mockData.personal;
+      const { contactInfo } = this.data.personal;
       return {
-        phone: mockContactInfo.phoneNumber,
-        email: mockContactInfo.email,
-        website: mockContactInfo.website,
-        address: mockContactInfo.address,
+        phone: contactInfo.phoneNumber,
+        email: contactInfo.email,
+        website: contactInfo.website,
+        address: contactInfo.address,
       };
     } catch (error) {
       return { error: "Contact information not available" };
@@ -55,18 +55,18 @@ class PortfolioTools {
    */
   getSkills(type = "all") {
     try {
-      const { mockHardSkills, mockSoftSkills } = this.mockData.skills;
+      const { hardSkills, softSkills } = this.data.skills;
 
       switch (type) {
         case "hard":
-          return { hardSkills: mockHardSkills };
+          return { hardSkills };
         case "soft":
-          return { softSkills: mockSoftSkills };
+          return { softSkills };
         case "all":
         default:
           return {
-            hardSkills: mockHardSkills,
-            softSkills: mockSoftSkills,
+            hardSkills,
+            softSkills,
           };
       }
     } catch (error) {
@@ -79,8 +79,8 @@ class PortfolioTools {
    */
   getExperience() {
     try {
-      const { mockExperience } = this.mockData.experience;
-      return mockExperience;
+      const { experience } = this.data.experience;
+      return experience;
     } catch (error) {
       return { error: "Experience information not available" };
     }
@@ -91,8 +91,8 @@ class PortfolioTools {
    */
   getEducation() {
     try {
-      const { mockEducation } = this.mockData.education;
-      return mockEducation;
+      const { education } = this.data.education;
+      return education;
     } catch (error) {
       return { error: "Education information not available" };
     }
@@ -103,8 +103,8 @@ class PortfolioTools {
    */
   getProjects() {
     try {
-      const { mocksProjects } = this.mockData.projects;
-      return mocksProjects;
+      const { projects } = this.data.projects;
+      return projects;
     } catch (error) {
       return { error: "Projects information not available" };
     }
@@ -115,8 +115,8 @@ class PortfolioTools {
    */
   getServices() {
     try {
-      const { mockServices } = this.mockData.services;
-      return mockServices;
+      const { services } = this.data.services;
+      return services;
     } catch (error) {
       return { error: "Services information not available" };
     }
@@ -127,15 +127,15 @@ class PortfolioTools {
    */
   calculateYearsOfExperience() {
     try {
-      const { mockExperience } = this.mockData.experience;
-      if (!mockExperience || !Array.isArray(mockExperience)) {
+      const { experience } = this.data.experience;
+      if (!experience || !Array.isArray(experience)) {
         return 8; // fallback
       }
 
       const currentYear = new Date().getFullYear();
       let totalYears = 0;
 
-      for (const exp of mockExperience) {
+      for (const exp of experience) {
         const when = exp.when.toLowerCase();
 
         if (when.includes("present")) {
@@ -165,15 +165,15 @@ class PortfolioTools {
    */
   getStats() {
     try {
-      const { mockPersonalInfo, mockFunFacts } = this.mockData.personal;
+      const { personalInfo, funFacts } = this.data.personal;
       const yearsExperience = this.calculateYearsOfExperience();
-      const personalInfo = mockPersonalInfo(yearsExperience);
-      const funFacts = mockFunFacts(yearsExperience);
+      const personalData = personalInfo(yearsExperience);
+      const funFactsData = funFacts(yearsExperience);
 
       return {
         yearsExperience,
-        summary: personalInfo.summary,
-        stats: funFacts,
+        summary: personalData.summary,
+        stats: funFactsData,
       };
     } catch (error) {
       return { error: "Statistics not available" };

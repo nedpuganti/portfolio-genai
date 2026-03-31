@@ -1,41 +1,34 @@
 const express = require("express");
 const router = express.Router();
-const { askAI, enhancedAI } = require("../core/ai");
+const { PortfolioAI } = require("../core/ai");
 
-// Middleware to extract user identifier for rate limiting
+// Initialize AI (single instance)
+const portfolioAI = new PortfolioAI();
+
+// Simple user identifier for rate limiting
 function getUserIdentifier(req) {
-  // Use IP address as basic identifier (can be enhanced with sessions/auth)
-  return req.ip || req.connection.remoteAddress || "unknown";
+  return req.ip || req.connection.remoteAddress || "anonymous";
 }
 
-// Main chat endpoint with smart conversation management
+// Optimized chat endpoint with minimal overhead
 router.post("/", async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    if (!prompt) {
+    // Basic validation
+    if (!prompt || typeof prompt !== "string") {
       return res.status(400).json({
-        error: "Prompt is required",
-        code: "MISSING_PROMPT",
-      });
-    }
-
-    // Basic input sanitization
-    if (typeof prompt !== "string") {
-      return res.status(400).json({
-        error: "Prompt must be a string",
-        code: "INVALID_PROMPT_TYPE",
+        error: "Valid prompt required",
+        code: "INVALID_PROMPT",
       });
     }
 
     const userIdentifier = getUserIdentifier(req);
-    const answer = await askAI(prompt, userIdentifier);
+    const answer = await portfolioAI.ask(prompt, userIdentifier);
 
     res.json({ answer });
   } catch (err) {
     console.error("Chat route error:", err);
-
-    // Don't expose internal error details
     res.status(500).json({
       error: "Service temporarily unavailable. Please try again later.",
       code: "INTERNAL_ERROR",
