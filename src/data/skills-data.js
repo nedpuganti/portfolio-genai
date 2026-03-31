@@ -15,6 +15,14 @@ const hardSkills = [
     name: "Jenkins / Docker / Kubernetes / Git",
     progress: 80,
   },
+  {
+    name: "GenAI / RAG / Vector Databases",
+    progress: 50,
+  },
+  {
+    name: "MCP / Ollama / Mistral / LLMs",
+    progress: 50,
+  },
 ];
 
 const softSkills = [

@@ -13,13 +13,17 @@ class ToolSelector {
     let searchTerm = null;
 
     // Contact information
-    if (/\b(email|phone|contact|reach|address|website)\b/i.test(question)) {
+    if (
+      /\b(email|phone|contact|reach|address|website|location|located|where.*located)\b/i.test(
+        question,
+      )
+    ) {
       tools.push("contact");
     }
 
     // Skills and technologies
     if (
-      /\b(skills|technologies|tech|programming|languages|frameworks|tools|stack|know|familiar|use)\b/i.test(
+      /\b(skills|technologies|tech|programming|languages|frameworks|tools|stack|know|familiar|use|strengths|abilities|expertise)\b/i.test(
         question,
       )
     ) {
@@ -65,7 +69,7 @@ class ToolSelector {
 
     // Projects and portfolio
     if (
-      /\b(projects|built|developed|created|portfolio|apps|applications|websites)\b/i.test(
+      /\b(projects|built|developed|created|portfolio|apps|applications|websites|trunow|mercury|aboveo|asa)\b/i.test(
         question,
       )
     ) {
@@ -79,6 +83,15 @@ class ToolSelector {
       )
     ) {
       tools.push("services");
+    }
+
+    // General/vague questions - provide comprehensive overview
+    if (
+      /\b(about.*yourself|tell.*about.*you|who.*are.*you|introduce|overview|summary)\b/i.test(
+        question,
+      )
+    ) {
+      tools.push("skills", "experience", "projects", "education");
     }
 
     // If no specific tools identified, get basic info

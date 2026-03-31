@@ -54,6 +54,18 @@ const services = [
     ],
   },
   {
+    name: "AI/ML Development",
+    types: [
+      "GenAI / LLM Integration",
+      "RAG (Retrieval-Augmented Generation)",
+      "Vector Databases / Embeddings",
+      "MCP (Model Context Protocol)",
+      "Ollama / Local LLMs",
+      "Mistral / OpenAI APIs",
+      "AI Chatbots / Assistants",
+    ],
+  },
+  {
     name: "Other Tools",
     types: [
       "ELK Stack (Logs)",

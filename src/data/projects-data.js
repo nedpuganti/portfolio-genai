@@ -79,6 +79,17 @@ const projects = [
     description: "C# .net, SQL Server",
     link: "https://www.asa.help/",
   },
+  {
+    id: 9,
+    image: "assets/img/projects/portfolio_ai.png",
+    title: "Portfolio GenAI Chatbot",
+    category: "AI/ML",
+    client: "Personal",
+    date: "2026",
+    description:
+      "Node.js, Express, Gemini AI, RAG Architecture, Vector Embeddings",
+    link: "https://github.com/narenedpuganti/portfolio-genai",
+  },
 ];
 
 module.exports = {
