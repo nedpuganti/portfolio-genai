@@ -1,22 +1,34 @@
 require("dotenv").config();
 
 const express = require("express");
+const helmet = require("helmet");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
+const cors = require("cors");
 const { initContext } = require("./core/context");
 
 const app = express();
 
+// Enable gzip compression for all responses
+app.use(compression());
+
+// Basic rate limiting: 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
+
+// Enable CORS for allowed origin from .env
+const corsOrigin = process.env.CORS_ORIGIN || "*";
+app.use(cors({ origin: corsOrigin }));
+
 // Security middleware
 app.set("trust proxy", 1); // Trust first proxy for IP detection
 app.use(express.json({ limit: "10mb" })); // Limit request size
-
-// Security headers
-app.use((req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  next();
-});
+app.use(helmet()); // Use helmet for security headers
 
 initContext();
 
