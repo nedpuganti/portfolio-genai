@@ -199,6 +199,7 @@ const TECH_TERM_PATTERNS = [
   { term: "redis", pattern: /\bredis\b/i },
   { term: "grafana", pattern: /\bgrafana\b/i },
   { term: "elk", pattern: /\belk\b|elastic stack/i },
+  { term: "react", pattern: /\breact\b/i },
   { term: "angular", pattern: /\bangular\b/i },
   { term: "ionic", pattern: /\bionic\b/i },
   { term: "flutter", pattern: /\bflutter\b/i },

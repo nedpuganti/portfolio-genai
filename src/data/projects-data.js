@@ -6,7 +6,8 @@ const projects = [
     category: "Mobile",
     client: "aboveo",
     date: null,
-    description: "Html, Css/Sass, Bootstrap, Javascript / jQuery / Typescript",
+    description:
+      "Mobile c-store back-office app for monitoring transactions, sales data, pricing, and day-to-day store operations on the go.",
     link: "https://apps.apple.com/us/app/mercury-one/id1015811834",
   },
   {
@@ -16,7 +17,8 @@ const projects = [
     category: "Mobile",
     client: "Trunow",
     date: null,
-    description: "Ionic Framework, Angular",
+    description:
+      "Consumer rewards app for finding gas deals, uploading receipts, earning cash back, and redeeming savings at participating locations.",
     link: "https://apps.apple.com/us/app/trunow-earn-rewards-on-purchases/id1256870067",
   },
   {
@@ -26,7 +28,8 @@ const projects = [
     category: "Mobile",
     client: "Trunow",
     date: null,
-    description: "Ionic Framework, Angular",
+    description:
+      "Retailer-facing app for Trunow partners to support loyalty offers, customer redemptions, and in-store traffic growth.",
     link: "https://apps.apple.com/us/app/retailernow/id1404731043",
   },
   {
@@ -36,7 +39,8 @@ const projects = [
     category: "Mobile",
     client: "Trunow",
     date: null,
-    description: "Ionic Framework, Angular",
+    description:
+      "Business app that helps retailers understand Trunow network benefits, premium rewards programs, and customer acquisition opportunities.",
     link: "https://apps.apple.com/us/app/locationsnow/id1257581248",
   },
   {
@@ -46,7 +50,8 @@ const projects = [
     category: "Mobile",
     client: "aboveo",
     date: null,
-    description: "Html, Css/Sass, Bootstrap, Javascript / jQuery / Typescript",
+    description:
+      "Inventory-focused companion app built around SKU scanning and stock tracking for retail and convenience-store workflows.",
     link: "https://apps.apple.com/us/app/mercury-one-inventory/id1175209796",
   },
   {
@@ -56,7 +61,8 @@ const projects = [
     category: "Website",
     client: "aboveo",
     date: null,
-    description: "Angular, Nx",
+    description:
+      "Marketing website for a retail operations platform covering surveillance, inventory, pricing, and convenience-store business tools.",
     link: "https://www.aboveo.com/",
   },
   {
@@ -66,7 +72,8 @@ const projects = [
     category: "Website",
     client: "Trunow",
     date: null,
-    description: "Angular, Material",
+    description:
+      "Consumer-facing website for a gas savings and rewards platform focused on deals, cash back, and reward redemption.",
     link: "https://www.trunow.com/",
   },
   {
@@ -76,7 +83,8 @@ const projects = [
     category: "Website",
     client: "asa",
     date: null,
-    description: "C# .net, SQL Server",
+    description:
+      "Website project for ASA Help, created as part of earlier freelance and nonprofit-focused web development work.",
     link: "https://www.asa.help/",
   },
   {
@@ -87,7 +95,7 @@ const projects = [
     client: "Personal",
     date: "2026",
     description:
-      "Node.js, Express, Gemini AI, RAG Architecture, Vector Embeddings",
+      "AI-powered portfolio assistant that answers visitor questions from structured portfolio data using grounded prompts and retrieval.",
     link: "https://github.com/narenedpuganti/portfolio-genai",
   },
 ];

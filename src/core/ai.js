@@ -7,6 +7,7 @@ const { ToolSelector } = require("./tool-selector");
 const { TOOL_CONTEXT_FILES } = require("./constants");
 const { buildPrompt } = require("./prompts");
 const { extractTextFromModelResult } = require("./response-utils");
+const { resolveDirectAnswer } = require("./direct-answer-resolver");
 
 let GoogleGenAI = null;
 try {
@@ -140,6 +141,17 @@ class PortfolioAI {
       );
       if (!confidence.canAnswer) {
         return "I'm not confident I can provide accurate information about that. Please ask about my skills, experience, projects, education, or contact info.";
+      }
+
+      const directAnswer = resolveDirectAnswer(question, toolData);
+      if (directAnswer) {
+        this.conversationManager.addMessageToConversation(
+          userIdentifier,
+          question,
+          directAnswer,
+        );
+
+        return directAnswer;
       }
 
       if (!this.ai) {

@@ -112,6 +112,10 @@ class ToolSelector {
       tools.add("experience");
     }
 
+    if (/\b(observability|monitoring|logging|analytics)\b/i.test(question)) {
+      tools.add("services");
+    }
+
     if (/\b(metrics|statistics|stats)\b/i.test(question)) {
       tools.add("stats");
     }
