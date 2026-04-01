@@ -38,7 +38,7 @@ class PortfolioAI {
     this.toolSelector = new ToolSelector();
   }
 
-  getRelevantToolData(toolSelection) {
+  getRelevantToolData(toolSelection, question = "") {
     const toolData = {};
     const searchOptions = { searchTerms: toolSelection.searchTerms };
 
@@ -61,9 +61,11 @@ class PortfolioAI {
           break;
         case "education":
           toolData.education = portfolioTools.getEducation(searchOptions);
+          toolData.educationHighlights = portfolioTools.getEducationHighlights();
           break;
         case "projects":
           toolData.projects = portfolioTools.getProjects(searchOptions);
+          toolData.projectHighlights = portfolioTools.getProjectHighlights();
           break;
         case "services":
           toolData.services = portfolioTools.getServices(searchOptions);
@@ -72,6 +74,11 @@ class PortfolioAI {
           toolData.stats = portfolioTools.getStats();
           break;
       }
+    }
+
+    if (/\b(hire|freelance|available|availability|contact)\b/i.test(question)) {
+      toolData.summary = toolData.summary || portfolioTools.getSummary();
+      toolData.contact = toolData.contact || portfolioTools.getContactInfo();
     }
 
     return toolData;
@@ -123,7 +130,7 @@ class PortfolioAI {
 
       // Fast tool selection (no AI calls)
       const toolSelection = this.toolSelector.getRelevantTools(question);
-      const toolData = this.getRelevantToolData(toolSelection);
+      const toolData = this.getRelevantToolData(toolSelection, question);
 
       // STEP 3: Generate Response
       const confidence = this.confidenceAssessor.assessConfidence(

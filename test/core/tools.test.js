@@ -38,3 +38,21 @@ test("additional info is derived from provided portfolio data only", () => {
   assert.equal(additionalInfo.developmentTools.includes("Grafana (Analytics)"), true);
   assert.equal(additionalInfo.cloudPlatforms.includes("Microsoft Azure"), false);
 });
+
+test("education highlights expose the highest qualification from provided data", () => {
+  const tools = new PortfolioTools();
+
+  const educationHighlights = tools.getEducationHighlights();
+
+  assert.equal(educationHighlights.highestEducation.name, "Master of Computer Science");
+  assert.deepEqual(educationHighlights.certifications, []);
+});
+
+test("project highlights expose the latest dated project from provided data", () => {
+  const tools = new PortfolioTools();
+
+  const projectHighlights = tools.getProjectHighlights();
+
+  assert.equal(projectHighlights.latestProject.title, "Portfolio GenAI Chatbot");
+  assert.equal(projectHighlights.latestProject.date, "2026");
+});

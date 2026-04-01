@@ -9,7 +9,7 @@ class ConversationManager {
     this.conversations = new Map();
     this.limits = {
       maxRecentQuestions: 3, // Keep last 3 questions (portfolio conversations are brief)
-      maxConversations: 25, // Small but more practical for a public portfolio
+      maxConversations: 100, // Allows broader scripted sweeps without constant eviction
       cleanupInterval: 30 * 60 * 1000, // 30 minutes (less frequent cleanup)
     };
 

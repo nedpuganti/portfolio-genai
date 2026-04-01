@@ -21,6 +21,7 @@ class ToolSelector {
     const tools = new Set();
     let skillType = "all";
     const searchTerms = this.extractSearchTerms(question);
+    const lowerQuestion = question.toLowerCase();
     const isBroadQuery = BROAD_QUESTION_PATTERNS.some((pattern) =>
       pattern.test(question),
     );
@@ -47,6 +48,7 @@ class ToolSelector {
       )
     ) {
       tools.add("skills");
+      tools.add("services");
 
       // Determine skill type
       if (/\b(soft|communication|leadership|teamwork)\b/i.test(question)) {
@@ -71,7 +73,7 @@ class ToolSelector {
 
     // Education
     if (
-      /\b(education|degree|university|college|school|studied|graduated)\b/i.test(
+      /\b(education|degree|university|college|school|studied|graduated|qualification|certification|certifications)\b/i.test(
         question,
       )
     ) {
@@ -80,7 +82,7 @@ class ToolSelector {
 
     // Projects and portfolio
     if (
-      /\b(projects|built|developed|created|portfolio|apps|applications|websites|trunow|mercury|aboveo|asa)\b/i.test(
+      /\b(projects|built|developed|created|portfolio|apps|applications|websites|trunow|mercury|aboveo|asa|recent|latest|favorite|favourite|best|challenging|challenge|open source)\b/i.test(
         question,
       )
     ) {
@@ -96,6 +98,11 @@ class ToolSelector {
       tools.add("services");
     }
 
+    if (/\b(hire|freelance|available|availability)\b/i.test(question)) {
+      tools.add("summary");
+      tools.add("contact");
+    }
+
     if (
       /\b(platform|cloud|backend|frontend|full[-\s]?stack|api|devops|release|delivery)\b/i.test(
         question,
@@ -103,6 +110,27 @@ class ToolSelector {
     ) {
       tools.add("services");
       tools.add("experience");
+    }
+
+    if (/\b(metrics|statistics|stats)\b/i.test(question)) {
+      tools.add("stats");
+    }
+
+    if (/\b(team|teamwork|collaboration|collaborate)\b/i.test(question)) {
+      tools.add("skills");
+      tools.add("summary");
+    }
+
+    if (searchTerms.length > 0 && /\b(project|built|build|experience)\b/i.test(question)) {
+      tools.add("projects");
+    }
+
+    if (
+      searchTerms.length > 0 &&
+      (lowerQuestion === searchTerms[0] || question.trim().split(/\s+/).length <= 2)
+    ) {
+      tools.add("services");
+      tools.add("projects");
     }
 
     // General/vague questions - provide comprehensive overview

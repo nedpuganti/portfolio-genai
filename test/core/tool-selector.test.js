@@ -32,3 +32,21 @@ test("tool selector falls back to a general summary bundle for broad role questi
   assert.equal(selection.tools.includes("summary"), true);
   assert.equal(selection.tools.includes("experience"), true);
 });
+
+test("tool selector adds contact and summary tools for hire and availability questions", () => {
+  const selector = new ToolSelector();
+
+  const selection = selector.getRelevantTools("How can I hire you?");
+
+  assert.equal(selection.tools.includes("services"), true);
+  assert.equal(selection.tools.includes("contact"), true);
+  assert.equal(selection.tools.includes("summary"), true);
+});
+
+test("tool selector captures stats for metrics questions", () => {
+  const selector = new ToolSelector();
+
+  const selection = selector.getRelevantTools("Show me your portfolio metrics");
+
+  assert.equal(selection.tools.includes("stats"), true);
+});

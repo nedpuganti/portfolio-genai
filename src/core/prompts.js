@@ -42,6 +42,12 @@ function buildPrompt({
   responseRules.push(
     "Sound like I am answering a real visitor to my portfolio, not like an assistant describing me.",
   );
+  responseRules.push(
+    "If the provided portfolio data contains a direct answer or a clearly related grouped match, answer from it directly.",
+  );
+  responseRules.push(
+    'Only say "I don\'t have that information." when the requested detail is truly missing from the provided data.',
+  );
 
   if (toolSelection.searchTerms?.length) {
     responseRules.push(

@@ -36,6 +36,11 @@ function cloneArray(values = []) {
   return Array.isArray(values) ? [...values] : [];
 }
 
+function parseYear(value) {
+  const match = String(value || "").match(/(20\d{2}|19\d{2})/);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
 /**
  * Internal tools system for portfolio AI to use specific functions
  */
@@ -229,6 +234,41 @@ class PortfolioTools {
       return personalInfo(yearsExperience);
     } catch (error) {
       return { error: "Summary not available" };
+    }
+  }
+
+  getEducationHighlights() {
+    try {
+      const education = this.getEducation();
+      if (!Array.isArray(education) || education.length === 0) {
+        return { highestEducation: null };
+      }
+
+      return {
+        highestEducation: education[0],
+        certifications: [],
+      };
+    } catch (error) {
+      return { highestEducation: null, certifications: [] };
+    }
+  }
+
+  getProjectHighlights() {
+    try {
+      const projects = this.getProjects();
+      if (!Array.isArray(projects) || projects.length === 0) {
+        return { latestProject: null };
+      }
+
+      const latestProject = [...projects]
+        .filter((project) => parseYear(project.date))
+        .sort((a, b) => parseYear(b.date) - parseYear(a.date))[0] || null;
+
+      return {
+        latestProject,
+      };
+    } catch (error) {
+      return { latestProject: null };
     }
   }
 
