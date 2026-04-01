@@ -1,5 +1,41 @@
 const { getContext } = require("./context");
 
+function normalizeSearchValue(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function filterCollectionBySearchTerms(collection, searchTerms = []) {
+  if (!Array.isArray(collection) || !Array.isArray(searchTerms) || searchTerms.length === 0) {
+    return collection;
+  }
+
+  const normalizedTerms = searchTerms
+    .map((term) => normalizeSearchValue(term))
+    .filter(Boolean);
+
+  if (normalizedTerms.length === 0) {
+    return collection;
+  }
+
+  const filtered = collection.filter((item) => {
+    const haystack = normalizeSearchValue(JSON.stringify(item));
+    return normalizedTerms.some((term) => haystack.includes(term));
+  });
+
+  return filtered.length > 0 ? filtered : collection;
+}
+
+function getServiceByName(services = [], name) {
+  return services.find((service) => service.name === name);
+}
+
+function cloneArray(values = []) {
+  return Array.isArray(values) ? [...values] : [];
+}
+
 /**
  * Internal tools system for portfolio AI to use specific functions
  */
@@ -48,20 +84,29 @@ class PortfolioTools {
   /**
    * Get skills summary
    */
-  getSkills(type = "all") {
+  getSkills(type = "all", options = {}) {
     try {
       const { hardSkills, softSkills } = this.data.skills;
+      const searchTerms = options.searchTerms || [];
+      const filteredHardSkills = filterCollectionBySearchTerms(
+        hardSkills,
+        searchTerms,
+      );
+      const filteredSoftSkills = filterCollectionBySearchTerms(
+        softSkills,
+        searchTerms,
+      );
 
       switch (type) {
         case "hard":
-          return { hardSkills };
+          return { hardSkills: filteredHardSkills };
         case "soft":
-          return { softSkills };
+          return { softSkills: filteredSoftSkills };
         case "all":
         default:
           return {
-            hardSkills,
-            softSkills,
+            hardSkills: filteredHardSkills,
+            softSkills: filteredSoftSkills,
           };
       }
     } catch (error) {
@@ -72,10 +117,10 @@ class PortfolioTools {
   /**
    * Get experience information
    */
-  getExperience() {
+  getExperience(options = {}) {
     try {
       const { experience } = this.data.experience;
-      return experience;
+      return filterCollectionBySearchTerms(experience, options.searchTerms);
     } catch (error) {
       return { error: "Experience information not available" };
     }
@@ -84,10 +129,10 @@ class PortfolioTools {
   /**
    * Get education information
    */
-  getEducation() {
+  getEducation(options = {}) {
     try {
       const { education } = this.data.education;
-      return education;
+      return filterCollectionBySearchTerms(education, options.searchTerms);
     } catch (error) {
       return { error: "Education information not available" };
     }
@@ -96,10 +141,10 @@ class PortfolioTools {
   /**
    * Get projects information
    */
-  getProjects() {
+  getProjects(options = {}) {
     try {
       const { projects } = this.data.projects;
-      return projects;
+      return filterCollectionBySearchTerms(projects, options.searchTerms);
     } catch (error) {
       return { error: "Projects information not available" };
     }
@@ -108,10 +153,10 @@ class PortfolioTools {
   /**
    * Get services information
    */
-  getServices() {
+  getServices(options = {}) {
     try {
       const { services } = this.data.services;
-      return services;
+      return filterCollectionBySearchTerms(services, options.searchTerms);
     } catch (error) {
       return { error: "Services information not available" };
     }
@@ -191,43 +236,30 @@ class PortfolioTools {
    * Get additional professional information (certifications, industries, APIs, cloud experience)
    */
   getAdditionalInfo() {
-    return {
-      certifications: [], // No formal certifications
-      industries: [
-        "Healthcare Technology",
-        "E-commerce",
-        "Financial Services",
-        "SaaS Platforms",
-        "Mobile Applications",
-      ],
-      cloudPlatforms: [
-        "Amazon Web Services (AWS)",
-        "Google Cloud Platform (GCP)",
-        "Microsoft Azure",
-        "Heroku",
-        "Vercel",
-      ],
-      APIs: [
-        "RESTful APIs",
-        "GraphQL",
-        "Payment APIs (Stripe, PayPal)",
-        "Social Media APIs (Facebook, Twitter)",
-        "Google Maps API",
-        "Third-party integrations",
-        "Microservices APIs",
-      ],
-      developmentTools: [
-        "Visual Studio Code",
-        "WebStorm",
-        "Git & GitHub",
-        "Docker",
-        "Webpack",
-        "npm/yarn",
-        "Chrome DevTools",
-        "Postman",
-        "Figma",
-      ],
-    };
+    try {
+      const { services } = this.data.services;
+      const cloudService = getServiceByName(services, "Cloud");
+      const toolsService = getServiceByName(services, "Other Tools");
+      const otherSkillsService = getServiceByName(services, "Other Skills");
+
+      return {
+        certifications: [],
+        industries: [],
+        cloudPlatforms: cloneArray(cloudService?.types),
+        APIs: cloneArray(otherSkillsService?.types).filter((item) =>
+          /api|graphql|rest/i.test(item),
+        ),
+        developmentTools: cloneArray(toolsService?.types),
+      };
+    } catch (error) {
+      return {
+        certifications: [],
+        industries: [],
+        cloudPlatforms: [],
+        APIs: [],
+        developmentTools: [],
+      };
+    }
   }
 
   /**

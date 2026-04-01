@@ -1,7 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 
-let cachedContext = "";
+let cachedContext = {
+  full: "",
+  files: {},
+};
+
+function formatContextBlock(file, content) {
+  return `FILE: ${file}\n${content}\n-----------------------\n`;
+}
 
 function buildContext() {
   const dir = path.join(__dirname, "../data");
@@ -9,11 +16,12 @@ function buildContext() {
   // Check if the data directory exists
   if (!fs.existsSync(dir)) {
     console.log("Data directory not found, initializing empty context");
-    return "";
+    return { full: "", files: {} };
   }
 
   const files = fs.readdirSync(dir);
-  let context = "";
+  const fileContents = {};
+  let fullContext = "";
 
   for (const file of files) {
     if (
@@ -24,15 +32,15 @@ function buildContext() {
       continue;
 
     const content = fs.readFileSync(path.join(dir, file), "utf-8");
+    fileContents[file] = content;
 
-    context += `
-FILE: ${file}
-${content}
------------------------
-`;
+    fullContext += formatContextBlock(file, content);
   }
 
-  return context;
+  return {
+    full: fullContext,
+    files: fileContents,
+  };
 }
 
 function initContext() {
@@ -40,8 +48,20 @@ function initContext() {
   console.log("Context loaded");
 }
 
-function getContext() {
-  return cachedContext;
+function getContext(options = {}) {
+  if (!cachedContext.full) {
+    cachedContext = buildContext();
+  }
+
+  const { files } = options;
+  if (!Array.isArray(files) || files.length === 0) {
+    return cachedContext.full;
+  }
+
+  return files
+    .filter((file) => cachedContext.files[file])
+    .map((file) => formatContextBlock(file, cachedContext.files[file]))
+    .join("");
 }
 
 module.exports = { initContext, getContext };

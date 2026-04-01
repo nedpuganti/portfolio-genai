@@ -1,4 +1,8 @@
-const { PORTFOLIO_KEYWORDS, MALICIOUS_PATTERNS } = require("./constants");
+const {
+  OFF_TOPIC_PATTERNS,
+  PORTFOLIO_KEYWORDS,
+  MALICIOUS_PATTERNS,
+} = require("./constants");
 
 /**
  * Security Validator for Portfolio Chatbot
@@ -19,7 +23,7 @@ class SecurityValidator {
       return { isValid: false, issues: ["Invalid input format"] };
     }
 
-    if (input.length > 500) {
+    if (input.length > 1000) {
       return { isValid: false, issues: ["Input too long"] };
     }
 
@@ -38,16 +42,21 @@ class SecurityValidator {
    * Simple portfolio intent validation
    */
   validateIntent(question) {
-    const lowerQuestion = question.toLowerCase();
+    const hasPortfolioHint = /\b(you|your|role|background|experience|skills|stack|work|build|built|developer|engineer|platform|frontend|backend|full[-\s]?stack|product|cloud|api|projects?|services?|contact|availability|specialize|specialise|focus|responsibilit(?:y|ies)|day to day)\b/i.test(
+      question,
+    );
+    const isClearlyOffTopic = OFF_TOPIC_PATTERNS.some((pattern) =>
+      pattern.test(question),
+    );
 
     // Check if question has portfolio-related keywords
-    const hasPortfolioIntent = PORTFOLIO_KEYWORDS.some((keyword) =>
-      lowerQuestion.includes(keyword),
+    const hasPortfolioIntent = PORTFOLIO_KEYWORDS.some((pattern) =>
+      pattern.test(question),
     );
 
     return {
-      isPortfolioRelated: hasPortfolioIntent,
-      isOffTopic: !hasPortfolioIntent,
+      isPortfolioRelated: hasPortfolioIntent || hasPortfolioHint,
+      isOffTopic: isClearlyOffTopic && !hasPortfolioIntent && !hasPortfolioHint,
     };
   }
 

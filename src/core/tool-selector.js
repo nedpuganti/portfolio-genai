@@ -2,15 +2,33 @@
  * Tool Selector for Portfolio Chatbot
  * Fast regex-based tool selection without AI calls
  */
+const {
+  BROAD_QUESTION_PATTERNS,
+  TECH_TERM_PATTERNS,
+} = require("./constants");
+
 class ToolSelector {
+  extractSearchTerms(question) {
+    return TECH_TERM_PATTERNS.filter(({ pattern }) => pattern.test(question)).map(
+      ({ term }) => term,
+    );
+  }
+
   /**
    * Fast tool selection using regex patterns (no AI calls needed)
    */
-  async getRelevantTools(question) {
-    const lowerQuestion = question.toLowerCase();
-    const tools = [];
+  getRelevantTools(question) {
+    const tools = new Set();
     let skillType = "all";
-    let searchTerm = null;
+    const searchTerms = this.extractSearchTerms(question);
+    const isBroadQuery = BROAD_QUESTION_PATTERNS.some((pattern) =>
+      pattern.test(question),
+    );
+    const prefersBullets =
+      isBroadQuery ||
+      /\b(bullets?|bullet\s+points?|list|outline|stack|skills|technologies|tools)\b/i.test(
+        question,
+      );
 
     // Contact information
     if (
@@ -18,16 +36,17 @@ class ToolSelector {
         question,
       )
     ) {
-      tools.push("contact");
+      tools.add("contact");
     }
 
     // Skills and technologies
     if (
-      /\b(skills|technologies|tech|programming|languages|frameworks|tools|stack|know|familiar|use|strengths|abilities|expertise)\b/i.test(
+      searchTerms.length > 0 ||
+      /\b(skills|technologies|tech|programming|languages|frameworks|tools|stack|know|familiar|use|strengths|abilities|expertise|worked with|platforms?)\b/i.test(
         question,
       )
     ) {
-      tools.push("skills");
+      tools.add("skills");
 
       // Determine skill type
       if (/\b(soft|communication|leadership|teamwork)\b/i.test(question)) {
@@ -35,26 +54,18 @@ class ToolSelector {
       } else if (/\b(technical|hard|programming|coding)\b/i.test(question)) {
         skillType = "hard";
       }
-
-      // Extract search term for specific technologies
-      const techPatterns =
-        /\b(react|angular|node|javascript|python|java|docker|aws|azure|gcp)\b/i;
-      const match = question.match(techPatterns);
-      if (match) {
-        searchTerm = match[0];
-      }
     }
 
     // Experience and work history
     if (
-      /\b(experience|work|job|career|role|position|current|employment|years)\b/i.test(
+      /\b(experience|work|job|career|role|position|current|employment|years|background|responsibilit(?:y|ies)|focus|specialize|specialise|day to day)\b/i.test(
         question,
       )
     ) {
-      tools.push("experience");
+      tools.add("experience");
 
-      if (/\b(how\s+many|years|statistics|how\s+much)\b/i.test(question)) {
-        tools.push("stats");
+      if (/\b(how\s+many|years|statistics|stats|how\s+much)\b/i.test(question)) {
+        tools.add("stats");
       }
     }
 
@@ -64,7 +75,7 @@ class ToolSelector {
         question,
       )
     ) {
-      tools.push("education");
+      tools.add("education");
     }
 
     // Projects and portfolio
@@ -73,7 +84,7 @@ class ToolSelector {
         question,
       )
     ) {
-      tools.push("projects");
+      tools.add("projects");
     }
 
     // Services offered
@@ -82,27 +93,48 @@ class ToolSelector {
         question,
       )
     ) {
-      tools.push("services");
+      tools.add("services");
     }
 
-    // General/vague questions - provide comprehensive overview
     if (
-      /\b(about.*yourself|tell.*about.*you|who.*are.*you|introduce|overview|summary)\b/i.test(
+      /\b(platform|cloud|backend|frontend|full[-\s]?stack|api|devops|release|delivery)\b/i.test(
         question,
       )
     ) {
-      tools.push("skills", "experience", "projects", "education");
+      tools.add("services");
+      tools.add("experience");
+    }
+
+    // General/vague questions - provide comprehensive overview
+    if (isBroadQuery) {
+      tools.add("summary");
+      tools.add("skills");
+      tools.add("experience");
+
+      if (
+        searchTerms.length === 0 &&
+        !/\b(stack|technologies|tools|cloud|platform|backend|frontend|devops|api)\b/i.test(
+          question,
+        )
+      ) {
+        tools.add("projects");
+        tools.add("education");
+      }
     }
 
     // If no specific tools identified, get basic info
-    if (tools.length === 0) {
-      tools.push("skills", "experience");
+    if (tools.size === 0) {
+      tools.add("summary");
+      tools.add("skills");
+      tools.add("experience");
     }
 
     return {
-      tools: [...new Set(tools)], // Remove duplicates
+      tools: [...tools],
       skillType,
-      searchTerm,
+      searchTerms,
+      isBroadQuery,
+      prefersBullets,
     };
   }
 }

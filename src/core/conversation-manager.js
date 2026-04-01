@@ -1,3 +1,5 @@
+const { summarizeForMemory } = require("./response-utils");
+
 /**
  * Simple Conversation Management System
  * Handles repeated question detection, rate limiting, and basic context
@@ -7,7 +9,7 @@ class ConversationManager {
     this.conversations = new Map();
     this.limits = {
       maxRecentQuestions: 3, // Keep last 3 questions (portfolio conversations are brief)
-      maxConversations: 5, // Max active conversations (minimal for portfolio)
+      maxConversations: 25, // Small but more practical for a public portfolio
       cleanupInterval: 30 * 60 * 1000, // 30 minutes (less frequent cleanup)
     };
 
@@ -19,9 +21,13 @@ class ConversationManager {
    * Start periodic cleanup
    */
   startCleanup() {
-    setInterval(() => {
+    this.cleanupTimer = setInterval(() => {
       this.cleanupOldConversations();
     }, this.limits.cleanupInterval);
+
+    if (typeof this.cleanupTimer.unref === "function") {
+      this.cleanupTimer.unref();
+    }
   }
 
   /**
@@ -39,7 +45,7 @@ class ConversationManager {
 
       conversation = {
         lastActivity: now,
-        recentQuestions: [], // Keep last few questions for context
+        recentExchanges: [], // Keep last few exchanges for context
       };
       this.conversations.set(userIdentifier, conversation);
     }
@@ -56,16 +62,16 @@ class ConversationManager {
 
     const messageEntry = {
       timestamp: Date.now(),
-      question:
-        question.substring(0, 150) + (question.length > 150 ? "..." : ""),
+      question: summarizeForMemory(question, 150),
+      responseSummary: summarizeForMemory(response, 180),
     };
 
-    conversation.recentQuestions.push(messageEntry);
+    conversation.recentExchanges.push(messageEntry);
     conversation.lastActivity = Date.now();
 
     // Keep only recent questions
-    if (conversation.recentQuestions.length > this.limits.maxRecentQuestions) {
-      conversation.recentQuestions = conversation.recentQuestions.slice(
+    if (conversation.recentExchanges.length > this.limits.maxRecentQuestions) {
+      conversation.recentExchanges = conversation.recentExchanges.slice(
         -this.limits.maxRecentQuestions,
       );
     }
@@ -76,17 +82,17 @@ class ConversationManager {
    */
   checkForRepeatedQuestion(userIdentifier, question) {
     const conversation = this.conversations.get(userIdentifier);
-    if (!conversation || conversation.recentQuestions.length < 2) {
+    if (!conversation || conversation.recentExchanges.length === 0) {
       return { isRepeated: false };
     }
 
     const lowerQuestion = question.toLowerCase();
 
     // Check last few questions for very similar ones
-    const recentQuestions = conversation.recentQuestions.slice(-3);
+    const recentQuestions = conversation.recentExchanges.slice(-3);
     const similarQuestion = recentQuestions.find((msg) => {
       const msgLower = msg.question.toLowerCase();
-      return this.calculateQuestionSimilarity(lowerQuestion, msgLower) > 0.8;
+      return this.calculateQuestionSimilarity(lowerQuestion, msgLower) > 0.65;
     });
 
     if (similarQuestion) {
@@ -94,6 +100,7 @@ class ConversationManager {
         isRepeated: true,
         lastAsked: similarQuestion.timestamp,
         timeSinceLastAsked: Date.now() - similarQuestion.timestamp,
+        previousResponseSummary: similarQuestion.responseSummary,
       };
     }
 
@@ -104,8 +111,18 @@ class ConversationManager {
    * Calculate similarity between two questions (kept simple)
    */
   calculateQuestionSimilarity(question1, question2) {
-    const words1 = new Set(question1.split(/\s+/).filter((w) => w.length > 3));
-    const words2 = new Set(question2.split(/\s+/).filter((w) => w.length > 3));
+    const words1 = new Set(
+      question1
+        .replace(/[^a-z0-9\s]+/gi, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2),
+    );
+    const words2 = new Set(
+      question2
+        .replace(/[^a-z0-9\s]+/gi, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2),
+    );
 
     const intersection = new Set([...words1].filter((w) => words2.has(w)));
     const union = new Set([...words1, ...words2]);
@@ -113,17 +130,36 @@ class ConversationManager {
     return union.size > 0 ? intersection.size / union.size : 0;
   }
 
+  isFollowUpQuestion(question) {
+    return /\b(more|more about that|tell me more|expand|elaborate|that|those|it|this one|what about)\b/i.test(
+      question,
+    );
+  }
+
   /**
    * Generate simple conversation context if helpful
    */
-  generateConversationContext(userIdentifier) {
+  generateConversationContext(userIdentifier, currentQuestion = "") {
     const conversation = this.conversations.get(userIdentifier);
-    if (!conversation || conversation.recentQuestions.length < 3) {
+    if (!conversation || conversation.recentExchanges.length === 0) {
       return "";
     }
 
-    const questionCount = conversation.recentQuestions.length;
-    return `\n\nCONVERSATION CONTEXT:\n- You've asked ${questionCount} questions in this session\n- This appears to be a multi-question portfolio inquiry`;
+    const recentContext = conversation.recentExchanges
+      .slice(-2)
+      .map(
+        (entry, index) =>
+          `${index + 1}. Question: ${entry.question}\n   Answer summary: ${entry.responseSummary}`,
+      )
+      .join("\n");
+
+    const followUpHint =
+      this.isFollowUpQuestion(currentQuestion) &&
+      conversation.recentExchanges.at(-1)?.responseSummary
+        ? `\nCurrent question looks like a follow-up. Most recent answer summary: ${conversation.recentExchanges.at(-1).responseSummary}`
+        : "";
+
+    return `Recent exchanges:\n${recentContext}${followUpHint}`;
   }
 
   /**
@@ -184,7 +220,7 @@ class ConversationManager {
     const conversation = this.conversations.get(userIdentifier);
     if (conversation) {
       conversation.lastActivity = Date.now();
-      conversation.recentQuestions = [];
+      conversation.recentExchanges = [];
     }
   }
 
@@ -200,7 +236,7 @@ class ConversationManager {
     const now = Date.now();
     return {
       exists: true,
-      questionCount: conversation.recentQuestions.length,
+      questionCount: conversation.recentExchanges.length,
       lastActivity: now - conversation.lastActivity,
       isActive: now - conversation.lastActivity < 30 * 60 * 1000, // 30 min
     };

@@ -2,7 +2,16 @@
  * Shared Constants for Portfolio AI
  * Eliminates duplication across components
  */
-const PORTFOLIO_KEYWORDS = [
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function createKeywordPattern(keyword) {
+  const pattern = escapeRegex(keyword).replace(/\\ /g, "[\\s-]+");
+  return new RegExp(`\\b${pattern}\\b`, "i");
+}
+
+const PORTFOLIO_KEYWORD_TERMS = [
   "skills",
   "experience",
   "projects",
@@ -15,11 +24,30 @@ const PORTFOLIO_KEYWORDS = [
   "technologies",
   "programming",
   "developer",
+  "engineer",
+  "engineering",
   "background",
   "know",
   "familiar",
   "built",
   "developed",
+  "build",
+  "role",
+  "responsibilities",
+  "day to day",
+  "focus",
+  "specialize",
+  "specialise",
+  "frontend",
+  "backend",
+  "full stack",
+  "platform",
+  "product",
+  "api",
+  "integration",
+  "release",
+  "delivery",
+  "devops",
   "email",
   "phone",
   "frameworks",
@@ -27,6 +55,26 @@ const PORTFOLIO_KEYWORDS = [
   "tools",
   "stack",
   "cloud",
+  "aws",
+  "gcp",
+  "docker",
+  "kubernetes",
+  "jenkins",
+  "nginx",
+  "argocd",
+  "certmanager",
+  "node",
+  "express",
+  "nest",
+  "mongo",
+  "mongodb",
+  "postgres",
+  "postgresql",
+  "redis",
+  "rabbitmq",
+  "kafka",
+  "grafana",
+  "elk",
   "freelance",
   "hire",
   "ai",
@@ -52,7 +100,6 @@ const PORTFOLIO_KEYWORDS = [
   "diploma",
   // Experience keywords
   "years",
-  "role",
   "position",
   "job",
   "current",
@@ -89,6 +136,8 @@ const PORTFOLIO_KEYWORDS = [
   "introduce",
 ];
 
+const PORTFOLIO_KEYWORDS = PORTFOLIO_KEYWORD_TERMS.map(createKeywordPattern);
+
 const MALICIOUS_PATTERNS = [
   /ignore\s+previous\s+instructions/i,
   /system\s+prompt/i,
@@ -97,7 +146,100 @@ const MALICIOUS_PATTERNS = [
   /hack/i,
 ];
 
+const OFF_TOPIC_PATTERNS = [
+  /\b(weather|temperature|forecast|rain|snow)\b/i,
+  /\b(sports?|nba|nfl|mlb|soccer|football scores?)\b/i,
+  /\b(recipe|cook|baking|ingredients)\b/i,
+  /\b(movie|celebrity|gossip|tv show)\b/i,
+  /\b(stocks?|crypto|bitcoin price|trading)\b/i,
+  /\b(election|politics?|senate|president)\b/i,
+  /\b(horoscope|zodiac|astrology)\b/i,
+];
+
+const BROAD_QUESTION_PATTERNS = [
+  /\b(about.*yourself|tell.*about.*you|who.*are.*you|introduce)\b/i,
+  /\b(overview|summary|summarize|summarise|background)\b/i,
+  /\b(what\s+do\s+you\s+do|what\s+kind\s+of\s+(developer|engineer))\b/i,
+  /\b(day\s+to\s+day|core\s+focus|main\s+focus|specialize|specialise)\b/i,
+];
+
+const BULLET_RESPONSE_PATTERNS = [
+  /\b(bullets?|bullet\s+points?|list|outline)\b/i,
+  /\b(summary|overview|stack|skills|technologies|tools)\b/i,
+  /\b(platform|cloud|backend|frontend|full[-\s]?stack)\b/i,
+];
+
+const TECH_TERM_PATTERNS = [
+  { term: "platform engineering", pattern: /\bplatform\s+engineering\b/i },
+  {
+    term: "full stack",
+    pattern: /\bfull[-\s]?stack\b|\bfull[-\s]?stacked\b/i,
+  },
+  { term: "frontend", pattern: /\bfrontend|front-end\b/i },
+  { term: "backend", pattern: /\bbackend|back-end\b/i },
+  { term: "product", pattern: /\bproduct\b/i },
+  { term: "api", pattern: /\bapi|apis|rest|graphql\b/i },
+  { term: "devops", pattern: /\bdevops\b/i },
+  { term: "aws", pattern: /\baws\b|amazon web services/i },
+  { term: "gcp", pattern: /\bgcp\b|google cloud/i },
+  { term: "docker", pattern: /\bdocker\b/i },
+  { term: "kubernetes", pattern: /\bkubernetes\b|\bk8s\b/i },
+  { term: "jenkins", pattern: /\bjenkins\b/i },
+  { term: "nginx", pattern: /\bnginx\b/i },
+  { term: "argocd", pattern: /\bargo\s?cd\b|\bargocd\b/i },
+  { term: "certmanager", pattern: /\bcert[\s-]?manager\b/i },
+  { term: "nodejs", pattern: /\bnode(\.js)?\b/i },
+  { term: "expressjs", pattern: /\bexpress(\.js)?\b/i },
+  { term: "nestjs", pattern: /\bnest(\.js)?\b/i },
+  { term: "mongodb", pattern: /\bmongo(db)?\b/i },
+  { term: "postgres", pattern: /\bpostgres(ql)?\b/i },
+  { term: "sql", pattern: /\bsql\b/i },
+  { term: "rabbitmq", pattern: /\brabbitmq\b/i },
+  { term: "kafka", pattern: /\bkafka\b/i },
+  { term: "redis", pattern: /\bredis\b/i },
+  { term: "grafana", pattern: /\bgrafana\b/i },
+  { term: "elk", pattern: /\belk\b|elastic stack/i },
+  { term: "angular", pattern: /\bangular\b/i },
+  { term: "ionic", pattern: /\bionic\b/i },
+  { term: "flutter", pattern: /\bflutter\b/i },
+  { term: "typescript", pattern: /\btypescript\b/i },
+  { term: "javascript", pattern: /\bjavascript\b/i },
+  { term: "html", pattern: /\bhtml5?\b/i },
+  { term: "css", pattern: /\bcss|scss|sass\b/i },
+  { term: "bootstrap", pattern: /\bbootstrap\b/i },
+  { term: "tailwind", pattern: /\btailwind\b/i },
+  { term: "nx", pattern: /\bnx\b/i },
+  { term: "astro", pattern: /\bastro\b/i },
+  { term: "testing", pattern: /\bjest|cypress|cucumber|testing\b/i },
+  { term: "swagger", pattern: /\bswagger\b/i },
+  { term: "sonar", pattern: /\bsonar\b/i },
+  { term: "postman", pattern: /\bpostman\b/i },
+  { term: "firebase", pattern: /\bfirebase\b/i },
+  { term: "genai", pattern: /\bgenai\b|\bgenerative ai\b/i },
+  { term: "rag", pattern: /\brag\b|retrieval-augmented generation/i },
+  { term: "llm", pattern: /\bllm|llms\b|large language model/i },
+  { term: "mcp", pattern: /\bmcp\b|model context protocol/i },
+  { term: "ollama", pattern: /\bollama\b/i },
+  { term: "mistral", pattern: /\bmistral\b/i },
+];
+
+const TOOL_CONTEXT_FILES = {
+  summary: ["personal-data.js", "services-data.js"],
+  contact: ["personal-data.js"],
+  skills: ["skills-data.js", "services-data.js"],
+  experience: ["experience-data.js"],
+  education: ["education-data.js"],
+  projects: ["projects-data.js"],
+  services: ["services-data.js"],
+  stats: ["personal-data.js", "experience-data.js"],
+};
+
 module.exports = {
   PORTFOLIO_KEYWORDS,
   MALICIOUS_PATTERNS,
+  OFF_TOPIC_PATTERNS,
+  BROAD_QUESTION_PATTERNS,
+  BULLET_RESPONSE_PATTERNS,
+  TECH_TERM_PATTERNS,
+  TOOL_CONTEXT_FILES,
 };
