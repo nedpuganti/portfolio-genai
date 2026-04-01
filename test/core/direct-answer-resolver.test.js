@@ -11,6 +11,8 @@ function buildToolData() {
     summary: tools.getSummary(),
     services: tools.getServices(),
     experience: tools.getExperience(),
+    projects: tools.getProjects(),
+    industryHighlights: tools.getIndustryHighlights(),
     stats: tools.getStats(),
   };
 }
@@ -55,4 +57,24 @@ test("direct answer resolver handles freelance availability with grounded availa
 
   assert.match(answer, /Available for frontend, platform UI, and product engineering opportunities/i);
   assert.match(answer, /do not explicitly label that as freelance/i);
+});
+
+test("direct answer resolver answers healthcare questions from structured industry data", () => {
+  const answer = resolveDirectAnswer(
+    "Do you have healthcare experience?",
+    buildToolData(),
+  );
+
+  assert.match(answer, /healthcare/i);
+  assert.match(answer, /ASA Help/i);
+});
+
+test("direct answer resolver answers ecommerce questions conservatively from commerce-adjacent data", () => {
+  const answer = resolveDirectAnswer(
+    "Have you worked on ecommerce projects?",
+    buildToolData(),
+  );
+
+  assert.match(answer, /commerce-adjacent/i);
+  assert.match(answer, /Trunow/i);
 });

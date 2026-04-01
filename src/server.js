@@ -8,6 +8,7 @@ const cors = require("cors");
 const { initContext } = require("./core/context");
 
 const app = express();
+const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Enable gzip compression for all responses
 app.use(compression());
@@ -21,9 +22,37 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Enable CORS for allowed origin from .env
-const corsOrigin = process.env.CORS_ORIGIN || "*";
-app.use(cors({ origin: corsOrigin }));
+// Enable CORS for allowed origin from .env (strict enforcement)
+const corsOrigins = (process.env.CORS_ORIGIN || "*")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Reject requests with no origin (like curl, Postman, or server-to-server)
+      if (!origin) {
+        return callback(
+          new Error("Requests without an Origin header are not allowed"),
+        );
+      }
+
+      const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(
+        origin,
+      );
+      const isAllowed =
+        corsOrigins.includes("*") ||
+        corsOrigins.includes(origin) ||
+        (isDevelopment && isLocalOrigin);
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  }),
+);
 
 // Security middleware
 app.set("trust proxy", 1); // Trust first proxy for IP detection

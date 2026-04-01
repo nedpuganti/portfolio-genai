@@ -36,6 +36,16 @@ function getYearsExperience(toolData = {}) {
   return yearsEntry?.value || null;
 }
 
+function getIndustryHighlights(toolData = {}) {
+  return Array.isArray(toolData.industryHighlights?.industries)
+    ? toolData.industryHighlights.industries
+    : [];
+}
+
+function getProjects(toolData = {}) {
+  return Array.isArray(toolData.projects) ? toolData.projects : [];
+}
+
 function buildReactAnswer(toolData = {}) {
   const frontendTypes = getServiceTypes(toolData.services, "Web/Frontend Development");
   const mobileTypes = getServiceTypes(toolData.services, "Mobile Development");
@@ -58,16 +68,13 @@ function buildObservabilityAnswer(toolData = {}) {
 }
 
 function buildIndustriesAnswer(toolData = {}) {
-  const experience = Array.isArray(toolData.experience) ? toolData.experience : [];
-  const organizations = experience
-    .map((item) => item.where)
-    .filter(Boolean);
+  const industries = getIndustryHighlights(toolData);
 
-  if (organizations.length === 0) {
+  if (industries.length === 0) {
     return null;
   }
 
-  return `My portfolio highlights work with ${formatList(organizations)}, but it does not explicitly categorize those roles by industry.`;
+  return `My portfolio highlights experience across ${formatList(industries)}.`;
 }
 
 function buildNodeYearsAnswer(toolData = {}) {
@@ -93,6 +100,50 @@ function buildAvailabilityAnswer(toolData = {}) {
   return `${availability} I do not explicitly label that as freelance availability in my portfolio.`;
 }
 
+function buildDomainAnswer(question, toolData = {}) {
+  const industries = getIndustryHighlights(toolData);
+  const projects = getProjects(toolData);
+
+  if (/\b(healthcare|health|medical)\b/i.test(question)) {
+    const matchingIndustries = industries.filter((item) => /health/i.test(item));
+    if (matchingIndustries.length > 0) {
+      return `Yes. My portfolio includes ${formatList(matchingIndustries)} experience through earlier project work such as ASA Help and Premier Cosmetic Surgery.`;
+    }
+  }
+
+  if (/\b(e-?commerce|commerce)\b/i.test(question)) {
+    const matchingProjects = projects.filter((project) =>
+      (project.industries || []).some((industry) => /commerce|rewards|retail/i.test(industry)),
+    );
+
+    if (matchingProjects.length > 0) {
+      return `I do not list a traditional storefront e-commerce build, but I do have commerce-adjacent experience through ${formatList(matchingProjects.map((project) => project.title))}, which focus on retail, rewards, and customer transactions.`;
+    }
+  }
+
+  if (/\bretail\b/i.test(question)) {
+    const matchingProjects = projects.filter((project) =>
+      (project.industries || []).some((industry) => /retail|store/i.test(industry)),
+    );
+
+    if (matchingProjects.length > 0) {
+      return `Yes. My portfolio includes retail-focused work across ${formatList(matchingProjects.map((project) => project.title))}.`;
+    }
+  }
+
+  if (/\b(nonprofit|charity)\b/i.test(question)) {
+    const matchingProjects = projects.filter((project) =>
+      (project.industries || []).some((industry) => /nonprofit/i.test(industry)),
+    );
+
+    if (matchingProjects.length > 0) {
+      return `Yes. My portfolio includes nonprofit-focused work such as ${formatList(matchingProjects.map((project) => project.title))}.`;
+    }
+  }
+
+  return null;
+}
+
 function resolveDirectAnswer(question, toolData = {}) {
   if (/\breact\b/i.test(question) && !hasExplicitTech(toolData, /\breact\b/i)) {
     return buildReactAnswer(toolData);
@@ -106,12 +157,12 @@ function resolveDirectAnswer(question, toolData = {}) {
     return buildIndustriesAnswer(toolData);
   }
 
-  if (/\bnode(\.js)?\b/i.test(question) && /\byears?\b/i.test(question)) {
-    return buildNodeYearsAnswer(toolData);
+  if (/\b(healthcare|health|medical|retail|commerce|e-?commerce|nonprofit|charity)\b/i.test(question)) {
+    return buildDomainAnswer(question, toolData);
   }
 
-  if (/\be-?commerce\b/i.test(question)) {
-    return "I do not have any projects explicitly labeled as e-commerce in my portfolio.";
+  if (/\bnode(\.js)?\b/i.test(question) && /\byears?\b/i.test(question)) {
+    return buildNodeYearsAnswer(toolData);
   }
 
   if (/\bcertification|certifications\b/i.test(question)) {

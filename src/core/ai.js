@@ -67,6 +67,7 @@ class PortfolioAI {
         case "projects":
           toolData.projects = portfolioTools.getProjects(searchOptions);
           toolData.projectHighlights = portfolioTools.getProjectHighlights();
+          toolData.industryHighlights = portfolioTools.getIndustryHighlights();
           break;
         case "services":
           toolData.services = portfolioTools.getServices(searchOptions);

@@ -29,7 +29,8 @@ test("additional info is derived from provided portfolio data only", () => {
   const additionalInfo = tools.getAdditionalInfo();
 
   assert.deepEqual(additionalInfo.certifications, []);
-  assert.deepEqual(additionalInfo.industries, []);
+  assert.equal(additionalInfo.industries.includes("Healthcare"), true);
+  assert.equal(additionalInfo.industries.includes("Retail Technology"), true);
   assert.deepEqual(additionalInfo.cloudPlatforms, [
     "AWS (S3, SNS, SQS, SES, etc.)",
     "GCP",
@@ -55,4 +56,14 @@ test("project highlights expose the latest dated project from provided data", ()
 
   assert.equal(projectHighlights.latestProject.title, "Portfolio GenAI Chatbot");
   assert.equal(projectHighlights.latestProject.date, "2026");
+});
+
+test("industry highlights aggregate industries from experience and projects data", () => {
+  const tools = new PortfolioTools();
+
+  const industryHighlights = tools.getIndustryHighlights();
+
+  assert.equal(industryHighlights.industries.includes("Healthcare"), true);
+  assert.equal(industryHighlights.industries.includes("Retail Technology"), true);
+  assert.equal(industryHighlights.industries.includes("Nonprofit"), true);
 });

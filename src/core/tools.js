@@ -41,6 +41,10 @@ function parseYear(value) {
   return match ? Number.parseInt(match[1], 10) : null;
 }
 
+function uniqueValues(values = []) {
+  return [...new Set(values.filter(Boolean))];
+}
+
 /**
  * Internal tools system for portfolio AI to use specific functions
  */
@@ -272,6 +276,28 @@ class PortfolioTools {
     }
   }
 
+  getIndustryHighlights() {
+    try {
+      const experience = this.getExperience();
+      const projects = this.getProjects();
+
+      return {
+        industries: uniqueValues([
+          ...(Array.isArray(experience)
+            ? experience.flatMap((item) => item.industries || [])
+            : []),
+          ...(Array.isArray(projects)
+            ? projects.flatMap((item) => item.industries || [])
+            : []),
+        ]),
+      };
+    } catch (error) {
+      return {
+        industries: [],
+      };
+    }
+  }
+
   /**
    * Get additional professional information (certifications, industries, APIs, cloud experience)
    */
@@ -281,10 +307,11 @@ class PortfolioTools {
       const cloudService = getServiceByName(services, "Cloud");
       const toolsService = getServiceByName(services, "Other Tools");
       const otherSkillsService = getServiceByName(services, "Other Skills");
+      const industryHighlights = this.getIndustryHighlights();
 
       return {
         certifications: [],
-        industries: [],
+        industries: industryHighlights.industries,
         cloudPlatforms: cloneArray(cloudService?.types),
         APIs: cloneArray(otherSkillsService?.types).filter((item) =>
           /api|graphql|rest/i.test(item),

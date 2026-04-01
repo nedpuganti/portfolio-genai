@@ -112,6 +112,15 @@ class ToolSelector {
       tools.add("experience");
     }
 
+    if (
+      /\b(healthcare|health|medical|retail|commerce|e-?commerce|nonprofit|charity|loyalty)\b/i.test(
+        question,
+      )
+    ) {
+      tools.add("experience");
+      tools.add("projects");
+    }
+
     if (/\b(observability|monitoring|logging|analytics)\b/i.test(question)) {
       tools.add("services");
     }

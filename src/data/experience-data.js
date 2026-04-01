@@ -3,6 +3,12 @@ const experience = [
     when: "2016 - Present",
     where: "Allied Informatics",
     name: "Full-Stack Frontend Developer",
+    industries: [
+      "Retail Technology",
+      "Consumer Rewards",
+      "Convenience Store Operations",
+      "Platform Engineering",
+    ],
     description:
       "HTML5, CSS3, jQuery, JavaScript, Angular, Ionic, Cordova, Flutter, Material, Agile, REST Services...",
   },
@@ -10,6 +16,7 @@ const experience = [
     when: "2014 - 2016",
     where: "",
     name: "Developer",
+    industries: ["Healthcare", "Nonprofit"],
     description: "Premier Cosmetic Surgery, Asa.help ...",
   },
   // {
