@@ -39,12 +39,7 @@ class PortfolioTools {
   getContactInfo() {
     try {
       const { contactInfo } = this.data.personal;
-      return {
-        phone: contactInfo.phoneNumber,
-        email: contactInfo.email,
-        website: contactInfo.website,
-        address: contactInfo.address,
-      };
+      return contactInfo;
     } catch (error) {
       return { error: "Contact information not available" };
     }
@@ -129,54 +124,66 @@ class PortfolioTools {
     try {
       const { experience } = this.data.experience;
       if (!experience || !Array.isArray(experience)) {
-        return 8; // fallback
+        throw new Error("Experience data not found");
       }
 
       const currentYear = new Date().getFullYear();
-      let totalYears = 0;
+      let minYear = currentYear;
+      let maxYear = 0;
 
+      // Find min start year and max end year from all experience entries
       for (const exp of experience) {
         const when = exp.when.toLowerCase();
 
         if (when.includes("present")) {
           // Handle "2016 - Present" format
           const startYear = parseInt(when.match(/(\d{4})/)?.[1] || currentYear);
-          totalYears += currentYear - startYear;
+          minYear = Math.min(minYear, startYear);
+          maxYear = Math.max(maxYear, currentYear);
         } else if (when.includes("-")) {
           // Handle "2014 - 2016" format
           const years = when.match(/(\d{4})/g);
           if (years && years.length >= 2) {
             const startYear = parseInt(years[0]);
             const endYear = parseInt(years[1]);
-            totalYears += endYear - startYear;
+            minYear = Math.min(minYear, startYear);
+            maxYear = Math.max(maxYear, endYear);
           }
         }
       }
 
-      return totalYears > 0 ? totalYears : 8; // fallback to 8 if calculation fails
+      // Calculate total years from earliest start to latest end
+      const totalYears = maxYear - minYear;
+      return totalYears;
     } catch (error) {
       console.warn("Error calculating years of experience:", error);
-      return 8; // fallback
+      throw error;
     }
   }
 
   /**
-   * Get portfolio statistics
+   * Get portfolio statistics (fun facts only)
    */
   getStats() {
     try {
-      const { personalInfo, funFacts } = this.data.personal;
+      const { funFacts } = this.data.personal;
       const yearsExperience = this.calculateYearsOfExperience();
-      const personalData = personalInfo(yearsExperience);
-      const funFactsData = funFacts(yearsExperience);
-
-      return {
-        yearsExperience,
-        summary: personalData.summary,
-        stats: funFactsData,
-      };
+      return funFacts(yearsExperience);
     } catch (error) {
       return { error: "Statistics not available" };
+    }
+  }
+
+  /**
+   * Get portfolio summary (bio/summary only)
+   */
+  getSummary() {
+    try {
+      const { personalInfo } = this.data.personal;
+      const yearsExperience = this.calculateYearsOfExperience();
+      return personalInfo(yearsExperience);
+    } catch (error) {
+      return { error: "Summary not available" };
     }
   }
 

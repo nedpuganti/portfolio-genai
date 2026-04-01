@@ -4,7 +4,7 @@ const hardSkills = [
     progress: 85,
   },
   {
-    name: "Javascript / Angular / React.js / Nodejs",
+    name: "Javascript / Angular / Nodejs",
     progress: 90,
   },
   {

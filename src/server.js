@@ -34,6 +34,7 @@ initContext();
 
 // Routes
 app.use("/chat", require("./routes/chat"));
+app.use("/api", require("./routes/data"));
 
 app.get("/", (_, res) =>
   res.json({
@@ -47,7 +48,18 @@ app.get("/", (_, res) =>
 app.use((req, res) => {
   res.status(404).json({
     error: "Endpoint not found",
-    availableEndpoints: ["/chat"],
+    availableEndpoints: [
+      "/chat",
+      "/api/contact",
+      "/api/skills",
+      "/api/experience",
+      "/api/education",
+      "/api/projects",
+      "/api/services",
+      "/api/stats",
+      "/api/additional",
+      "/api/all",
+    ],
     method: req.method,
     path: req.originalUrl,
   });

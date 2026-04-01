@@ -28,6 +28,8 @@ RULES:
 - If you don't know something, say "I don't have that information"
 - Don't make stuff up
 - Skip casual greetings like "Hey there!" and go straight to answering
+- For professional summaries, role overviews, skills, and tech stack questions, prefer short bullet points instead of one large paragraph
+- Keep bullets concise and group related technologies together when possible
 `;
 
     // Initialize components
