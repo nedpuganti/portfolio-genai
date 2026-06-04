@@ -19,6 +19,14 @@ function summarizeForMemory(text, maxLength = 160) {
 }
 
 function extractTextFromModelResult(result) {
+  if (typeof result?.text === "string") {
+    const text = result.text.trim();
+
+    if (text) {
+      return text;
+    }
+  }
+
   const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
 
   for (const candidate of candidates) {

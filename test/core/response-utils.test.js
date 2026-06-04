@@ -6,6 +6,21 @@ const {
   summarizeForMemory,
 } = require("../../src/core/response-utils");
 
+test("response parser prefers SDK text convenience property", () => {
+  const text = extractTextFromModelResult({
+    text: "  Hello from the SDK  ",
+    candidates: [
+      {
+        content: {
+          parts: [{ text: "fallback" }],
+        },
+      },
+    ],
+  });
+
+  assert.equal(text, "Hello from the SDK");
+});
+
 test("response parser concatenates text parts safely", () => {
   const text = extractTextFromModelResult({
     candidates: [

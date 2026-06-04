@@ -1,6 +1,6 @@
 const contactInfo = {
   phoneNumber: "(423) 902-8634",
-  email: "itsmenarene@gmail.com",
+  email: "narenedpuganti@gmail.com",
   website: "www.narenedpuganti.com",
   address: "Atlanta, USA",
   location: "Atlanta, USA",

@@ -182,16 +182,16 @@ class PortfolioAI {
       const result = await this.ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: securePrompt }] }],
-        generationConfig: {
+        config: {
           temperature: 0.1,
           maxOutputTokens: 1000,
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+          ],
         },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
-          },
-        ],
       });
 
       const response =
