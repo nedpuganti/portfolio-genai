@@ -1,0 +1,11 @@
+{
+  "name": "portfolio-genai",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-08-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "CORS_ORIGIN": "https://narenedpuganti.com,https://www.narenedpuganti.com",
+    "PORT": 3000,
+    "NODE_ENV": "production",
+  },
+}

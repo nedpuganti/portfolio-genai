@@ -1,5 +1,11 @@
-const fs = require("fs");
-const path = require("path");
+const DATA_MODULES = {
+  "education-data.js": require("../data/education-data"),
+  "experience-data.js": require("../data/experience-data"),
+  "personal-data.js": require("../data/personal-data"),
+  "projects-data.js": require("../data/projects-data"),
+  "services-data.js": require("../data/services-data"),
+  "skills-data.js": require("../data/skills-data"),
+};
 
 let cachedContext = {
   full: "",
@@ -11,29 +17,12 @@ function formatContextBlock(file, content) {
 }
 
 function buildContext() {
-  const dir = path.join(__dirname, "../data");
-
-  // Check if the data directory exists
-  if (!fs.existsSync(dir)) {
-    console.log("Data directory not found, initializing empty context");
-    return { full: "", files: {} };
-  }
-
-  const files = fs.readdirSync(dir);
   const fileContents = {};
   let fullContext = "";
 
-  for (const file of files) {
-    if (
-      !file.endsWith(".json") &&
-      !file.endsWith(".md") &&
-      !file.endsWith(".js")
-    )
-      continue;
-
-    const content = fs.readFileSync(path.join(dir, file), "utf-8");
+  for (const [file, data] of Object.entries(DATA_MODULES)) {
+    const content = JSON.stringify(data, null, 2);
     fileContents[file] = content;
-
     fullContext += formatContextBlock(file, content);
   }
 
